@@ -4,24 +4,34 @@ import { connect } from "react-redux";
 import { addToParty } from "../actions/partyActions";
 import { toPercent } from "../utils";
 
-import { DataUl, DataLi, TabsWrapper, TabsTab } from "./styles";
+import { DataUl, DataLi, KeyValWrap, TabsWrapper, TabsTab } from "./styles";
 
-function SortedTuple({ label, data, styles }) {
+function makeTuplesByUsage(dict) {
+  return Object.keys(dict)
+    .map(key => {
+      return [key, dict[key]];
+    })
+    .sort((a, b) => {
+      return b[1] - a[1];
+    });
+}
+
+function SortedTuple({ data, styles }) {
   return (
-    <div>
-      {label}
-      <DataUl styles={styles}>
-        {data.map(datum => (
-          <DataLi key={datum[0]}>
-            {datum[0]}: {datum[1]}
-          </DataLi>
-        ))}
-      </DataUl>
-    </div>
+    <DataUl styles={styles}>
+      {data.map(datum => (
+        <DataLi key={datum[0]}>
+          <KeyValWrap>
+            <span>{datum[0]}</span>
+            <span>{datum[1].toFixed(2)}</span>
+          </KeyValWrap>
+        </DataLi>
+      ))}
+    </DataUl>
   );
 }
 
-const tupleProps = ["abilities", "moves", "teammates"];
+const tupleProps = ["abilities", "moves", "teammates", "spreads"];
 
 class Inspected extends Component {
   constructor(props) {
@@ -70,7 +80,6 @@ class Inspected extends Component {
             ))}
           </TabsWrapper>
           <SortedTuple
-            label={this.state.selectedTuple}
             data={this.props[this.state.selectedTuple]}
             styles={{ "max-height": "200px" }}
           />
@@ -88,29 +97,10 @@ const mapStateToProps = state => {
     };
   }
 
-  const moves = Object.keys(mon["Moves"])
-    .map(moveName => {
-      return [moveName, mon["Moves"][moveName]];
-    })
-    .sort((a, b) => {
-      return b[1] - a[1];
-    });
-
-  const abilities = Object.keys(mon["Abilities"])
-    .map(abilityName => {
-      return [abilityName, mon["Abilities"][abilityName]];
-    })
-    .sort((a, b) => {
-      return b[1] - a[1];
-    });
-
-  const teammates = Object.keys(mon["Teammates"])
-    .map(teammateName => {
-      return [teammateName, mon["Teammates"][teammateName]];
-    })
-    .sort((a, b) => {
-      return b[1] - a[1];
-    });
+  const moves = makeTuplesByUsage(mon["Moves"]);
+  const abilities = makeTuplesByUsage(mon["Abilities"]);
+  const teammates = makeTuplesByUsage(mon["Teammates"]);
+  const spreads = makeTuplesByUsage(mon["Spreads"]);
 
   return {
     mon,
@@ -118,7 +108,8 @@ const mapStateToProps = state => {
     usage: mon.usage,
     moves,
     abilities,
-    teammates
+    teammates,
+    spreads
   };
 };
 
